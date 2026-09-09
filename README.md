@@ -124,5 +124,5 @@ streamlit run app_ui.py --server.port 8501
 * **Vector Database**: Qdrant
 * **Keyword Search**: BM25 (Rank-BM25)
 
-```
+
 

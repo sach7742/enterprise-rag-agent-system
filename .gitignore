@@ -6,3 +6,12 @@ __pycache__/
 *.log
 data/*.pkl
 qdrant_db/
+
+# Databases, Indexes & Local Data
+*.pkl
+qdrant_db/
+data/
+
+# Duplicate or Local Scripts
+app/run.sh
+app/scripts/

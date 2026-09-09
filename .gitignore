@@ -4,4 +4,5 @@ __pycache__/
 .env
 .pytest_cache/
 *.log
-data/
+data/*.pkl
+qdrant_db/

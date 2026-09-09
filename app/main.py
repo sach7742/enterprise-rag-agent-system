@@ -1,46 +1,37 @@
-from fastapi import FastAPI, HTTPException
+from typing import List, Optional
+from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
 
-from app.graph_builder import create_workflow
+# Import the compiled graph from graph_router.py
+# (Adjust the module path if graph_router.py is located elsewhere, e.g., src.graph_router)
+from src.agents.graph_router import app as app_graph
 
-app = FastAPI(title="Enterprise RAG Agent System")
+app = FastAPI()
 
-# Compile LangGraph graph
-workflow = create_workflow()
-graph = workflow.compile()
 
 class QueryRequest(BaseModel):
-    query: str
-    chat_history: Optional[List[Dict[str, str]]] = []
+    question: str
+
+
+class SourceItem(BaseModel):
+    title: str
+    url: str
+
 
 class QueryResponse(BaseModel):
-    query: str
-    route: Optional[str] = "direct"
     answer: str
-    documents: Optional[List[Dict[str, Any]]] = []
+    sources: Optional[List[SourceItem]] = []
 
-@app.get("/")
-def read_root():
-    return {"status": "online", "system": "Enterprise RAG Agent"}
 
 @app.post("/query", response_model=QueryResponse)
-async def process_query(request: QueryRequest):
-    try:
-        initial_state = {
-            "query": request.query,
-            "chat_history": request.chat_history or [],
-            "route": "",
-            "documents": [],
-            "answer": ""
-        }
-        # Invoke compiled workflow synchronously/asynchronously
-        result = await graph.ainvoke(initial_state)
-        return QueryResponse(
-            query=result["query"],
-            route=result.get("route", "direct"),
-            answer=result.get("answer", "No response generated."),
-            documents=result.get("documents", [])
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def query_agent(request: QueryRequest):
+    # Align dictionary key with GraphState field ('query')
+    initial_state = {"query": request.question}
+
+    # Execute graph execution
+    final_state = await app_graph.ainvoke(initial_state)
+
+    return QueryResponse(
+        answer=final_state.get("answer", "No answer generated."),
+        sources=final_state.get("sources", []),
+    )
